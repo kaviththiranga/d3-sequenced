@@ -43,7 +43,7 @@
   }
 
 </style>
-<link rel="stylesheet" href="css/font-awesome.min.css">
+<link rel="stylesheet" href="css/font-wso2.min.css">
 <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 
 <body>
@@ -224,9 +224,9 @@ function drawLifeLine(parent, id, data, handler, x, y, width, height, lineHeight
          .attr("y", y)
          .attr('text-anchor', 'middle')
          .attr('dominant-baseline', 'central')
-         .style('font-family','FontAwesome')
+         .style('font-family','font-wso2')
          .style('font-size','14px')
-         .text(function (d) { return '\uf00d'; })
+         .text(function (d) { return '\ue630'; })
          .on("click", function(d) {
             svg.selectAll("#" + id).remove()
          });
