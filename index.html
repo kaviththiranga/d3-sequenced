@@ -116,7 +116,9 @@ var dragToolBoxLifeLine = d3.behavior.drag()
 
     // Draw new lifeline
     var id_ = "lifeline-" + lifeLineCount;
-    lifeLineData.push({ id: id_, x: d.x, y: d.y });
+    if(lifeLineData.indexOf(id_) < 0) {
+      lifeLineData.push({ id: id_, x: d.x, y: d.y });
+    }
     drawLifeLine(drawingCanvas, id_, lifeLineData, dragLifeLine, d.x, lifeLineY + 50, 100, 30, 200, true, true);
     lifeLineCount += 1;
   });
