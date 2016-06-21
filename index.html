@@ -2,8 +2,11 @@
 <meta charset="utf-8">
 <style>
   * {
-    font-family: sans-serif;
-    font-size: 10pt;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 9pt;
+  }
+  body {
+    margin: 0;
   }
   .normal {
     font-weight: normal;
@@ -11,90 +14,233 @@
   .bold {
     font-weight: bold;
   }
+  .toolbar {
+    fill: #A3A3A3;
+  }
   .toolbox-rect {
-    fill: #D3D3D3;
+    fill: #D8D8D8;
   }
   .rect {
-    fill: #4682B4;
-    stroke: none;
+    fill: #3F7AB1;
+    stroke: #181818;
     stroke-width: 2px;
+    cursor: move;
     pointer-events: all;
   }
-  .line {
-    stroke: #4682B4;
-    stroke-dasharray: 3,3;
-    stroke-width: 2px;
+  .rect .text {
+    color: #FFF;
   }
+  .rect-marker {
+    fill: #3C3C3C;
+  }
+  .line {
+    stroke: #181818;
+    stroke-dasharray: 4,1;
+    stroke-width: 1px;
+  }
+
 </style>
+<link rel="stylesheet" href="css/font-awesome.min.css">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-blocks = [
-  { x: 0, y: 0 },
-];
+// Main control flow ---- //
+toolBoxLifeLineData = [];
+lifeLineData = [];
 
-drag = d3.behavior.drag()
-  .origin(Object)
-  .on("drag", function(d) {
-    d.x = d3.event.x;
-    d.y = d3.event.y;
-    drawRect();
+var lifeLineCount = 1;
+var toolboxLifeLineX = 20;
+var toolboxLifeLineY = 80;
+var lifeLineY = 0;
+
+// Create svg container
+svg = d3.select("body")
+     .append("div")
+     .classed("svg-container", true) //container class to make it responsive
+     .append("svg")
+     // responsive SVG needs these 2 attributes and no width and height attr
+     .attr("preserveAspectRatio", "xMinYMin meet")
+     .attr("viewBox", "0 0 1000 800")
+     .classed("svg-content-responsive", true);
+
+drawingCanvas = svg.append("svg:svg")
+        .attr("class", "drawing-canvas")
+        .attr("width", 1000)
+        .attr("height", 1000)
+        .attr("x", 0)
+        .attr("y", 30);
+
+// Lifeline drag event handler ---- //
+var dragLifeLineOriginCount = 0;
+var dragLifeLine = d3.behavior.drag()
+       .origin(function (d) {
+         if(dragLifeLineOriginCount == 0) {
+           return { x: 0, y: 0 };
+         }
+         console.log("[lifeline] [origin] id: " + d.id + " x: " + d.x + " y: " + d.y);
+         return { x: d.x, y: d.y };
+       })
+       .on("drag", function(d) {
+         console.log("[lifeline] [dragging] id: " + d.id + " x: " + d.x + " y:" + d.y);
+         moveGroup(d3.select(this), lifeLineData, d);
+       })
+       .on("dragstart", function(d) {
+         console.log("[lifeline] [drag started] id: " + d.id + "x: " + d.x + " y:" + d.y);
+       })
+       .on("dragend", function(d) {
+         console.log("[lifeline] [drag ended] id: " + d.id + " x: " + d.x + " y:" + d.y);
+       });
+
+// Toolbox lifeline drag event handler ---- //
+var dragToolBoxLifeLine = d3.behavior.drag()
+  .origin(function (d) {
+    console.log("[toolbox-lifeline] [origin] id: " + d.id + "x: " + d.x + " y:" + d.y)
+    return { x: 0, y: 0 };
   })
-  .on("dragstart", function() {
-    blocks.push({ x: 0, y: 0});
+  .on("drag", function(d) {
+    console.log("[toolbox-lifeline] [dragging] id: " + d.id + " x: " + d.x + " y:" + d.y);
+    moveGroup(d3.select("#toolbox-lifeline-movable"), toolBoxLifeLineData, d);
+  })
+  .on("dragstart", function(d) {
+    console.log("[toolbox-lifeline] [drag started] id: " + d.id + "x: " + d.x + " y:" + d.y);
+  })
+  .on("dragend", function(d) {
+    console.log("[toolbox-lifeline] [drag ended] id: " + d.id + "x: " + d.x + " y:" + d.y);
+
+    // Return the toolbox lifeline back to the origin
+    d3.select("#toolbox-lifeline-movable")
+      .attr("transform", function(d) { return "translate(0, 0)"; });
+
+    // Draw new lifeline
+    var id_ = "lifeline-" + lifeLineCount;
+    lifeLineData.push({ id: id_, x: d.x, y: d.y });
+    drawLifeLine(drawingCanvas, id_, lifeLineData, dragLifeLine, d.x, lifeLineY + 50, 100, 30, 200, true, true);
+    lifeLineCount += 1;
   });
 
-svg = d3.select("body")
-  .append("svg")
-  .attr("width", 1000)
-  .attr("height", 600);
+var stillToolboxLifeLine = d3.behavior.drag();
 
-drawToolboxRect();
-drawRect();
+drawToolbar();
+drawToolbox();
+drawDrawingCanvas();
 
-function drawToolboxRect() {
-  svg.append("rect")
+// Functions ---- //
+function drawToolbar() {
+   var toolbar = svg.append("rect")
+    .attr("id", "toolbar-rect")
+    .attr("class", "toolbar")
+    .attr("width", 1000)
+    .attr("height", 30)
+    .attr("x", 0)
+    .attr("y", 0);
+
+  addLabel(svg, 400, 20, "bold", "Sequence Diagram Editor");
+}
+
+function drawToolbox() {
+  drawToolboxRect(svg);
+  toolBoxLifeLineData.push({ id: "toolbox-lifeline-still", x:toolboxLifeLineX, y: toolboxLifeLineY});
+  drawLifeLine(svg, "toolbox-lifeline-still", toolBoxLifeLineData, stillToolboxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
+
+  toolBoxLifeLineData.push({ id: "toolbox-lifeline-movable", x:toolboxLifeLineX, y: toolboxLifeLineY});
+  drawLifeLine(svg, "toolbox-lifeline-movable", toolBoxLifeLineData, dragToolBoxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
+
+  addLabel(svg, 35, 170, "normal", "Lifeline");
+}
+
+function drawDrawingCanvas() {
+}
+
+function drawToolboxRect(parent) {
+  parent.append("rect")
      .attr("class", "toolbox-rect")
-     .attr("width", 160)
-     .attr("height", 500)
-     .attr("x", 10)
-     .attr("y", 10);
+     .attr("width", 190)
+     .attr("height", 1000)
+     .attr("x", 0)
+     .attr("y", 30);
 
-  setText(svg, 60,35, "bold", "Toolbox");
+  addLabel(parent, 65, 60, "bold", "Toolbox");
 }
 
-function drawRect() {
-  group = svg.selectAll("g")
-         .attr("transform", function(d) { return "translate("+d.x+","+d.y+")"; })
-         .data(blocks);
+// Draw lifeline elemtnt in toolbox
+function drawLifeLine(parent, id, data, handler, x, y, width, height, lineHeight, addCloseButton, addIdAsLabel) {
 
-  groupEnter = group.enter().append("g")
-                .call(drag);
+  group = parent.selectAll("g")
+        .data(data)
+        .enter()
+        .append("g")
+        .attr("id", id)
+        .call(handler);
 
-  groupEnter.append("rect")
+  group.append("rect")
        .attr("class", "rect")
-       .attr("width", 100)
-       .attr("height", 50)
-       .attr("x", 40)
-       .attr("y", 50);
+       .attr("width", width)
+       .attr("height", height)
+       .attr("x", x)
+       .attr("y", y);
 
-  setText(groupEnter, 70, 80, "normal", "Object");
+  if(addIdAsLabel) {
+    addLabel(group, x + width/4, y + (height/4)*2.5, "normal", id);
+  }
 
-  groupEnter.append("line")
+  lineX = x + width/2;
+  lineY1 = y + height;
+  lineY2 = y + height + lineHeight;
+
+  group.append("line")
        .attr("class", "line")
-       .attr("x1", 90)
-       .attr("y1", 90)
-       .attr("x2", 90)
-       .attr("y2", 90 + 150);
+       .attr("x1", lineX)
+       .attr("y1", lineY1)
+       .attr("x2", lineX)
+       .attr("y2", lineY2);
+
+  if(addCloseButton) {
+    // Close icon
+    group.append('text')
+         .attr("x", lineX + width/2)
+         .attr("y", y)
+         .attr('text-anchor', 'middle')
+         .attr('dominant-baseline', 'central')
+         .style('font-family','FontAwesome')
+         .style('font-size','14px')
+         .text(function (d) { return '\uf00d'; })
+         .on("click", function(d) {
+            svg.selectAll("#" + id).remove()
+         });
+    }
 }
 
-function setText(object_, x, y, class_, text) {
-  object_.append("text")
+function moveGroup(group, data, d) {
+  // Update data item
+  d.x = d3.event.x;
+  d.y = lifeLineY;
+  // Set data item values to element coordinates
+  group.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+}
+
+// Add a label to an element
+function addLabel(parent, x, y, class_, text) {
+  parent.append("text")
      .attr("class", class_)
      .attr("x", x)
      .attr("y", y)
      .text(text);
+}
+
+// Add a text field to an element
+function addTextField(parent, x, y, class_, text) {
+  data = [{ text : "Lifeline" }];
+  parent.append("text")
+     .attr("class", class_)
+     .attr("x", x)
+     .attr("y", y)
+     .attr("contenteditable", true)
+     .data(data)
+     .text(function(d) { return d.text })
+     .on("keyup", function(d) { d.text = d3.select(this).text(); });
 }
 
 </script>
