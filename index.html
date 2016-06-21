@@ -2,11 +2,17 @@
 <meta charset="utf-8">
 <style>
   * {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 9pt;
+    font-family: 'Oxygen', sans-serif;
+    font-size: 8pt;
   }
   body {
     margin: 0;
+  }
+  .h2 {
+    font-size: 9pt;
+  }
+  .white {
+    fill: #FFF;
   }
   .normal {
     font-weight: normal;
@@ -21,9 +27,10 @@
     fill: #D8D8D8;
   }
   .rect {
-    fill: #3F7AB1;
+    fill: #0077b3;
     stroke: #181818;
-    stroke-width: 2px;
+    opacity: 0.7;
+    stroke-width: 1.5px;
     cursor: move;
     pointer-events: all;
   }
@@ -36,7 +43,7 @@
   .line {
     stroke: #181818;
     stroke-dasharray: 4,1;
-    stroke-width: 1px;
+    stroke-width: 1.5px;
   }
   .activation-toolbox-item {
     fill: #181818;
@@ -44,7 +51,7 @@
 
 </style>
 <link rel="stylesheet" href="css/font-wso2.min.css">
-<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Oxygen" rel="stylesheet">
 
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -62,16 +69,18 @@ var lifeLineY = 0;
 // Create svg container
 svg = d3.select("body")
      .append("div")
-     .classed("svg-container", true) //container class to make it responsive
+     //.classed("svg-container", true) //container class to make it responsive
      .append("svg")
+     .attr("width", 1200)
+     .attr("height", 1000);
      // responsive SVG needs these 2 attributes and no width and height attr
-     .attr("preserveAspectRatio", "xMinYMin meet")
-     .attr("viewBox", "0 0 1000 800")
-     .classed("svg-content-responsive", true);
+     //.attr("preserveAspectRatio", "xMinYMin meet")
+     //.attr("viewBox", "0 0 1000 800");
+     //.classed("svg-content-responsive", true);
 
 drawingCanvas = svg.append("svg:svg")
         .attr("class", "drawing-canvas")
-        .attr("width", 1000)
+        .attr("width", 1200)
         .attr("height", 1000)
         .attr("x", 0)
         .attr("y", 30);
@@ -137,17 +146,21 @@ function drawToolbar() {
    var toolbar = svg.append("rect")
     .attr("id", "toolbar-rect")
     .attr("class", "toolbar")
-    .attr("width", 1000)
+    .attr("width", 1200)
     .attr("height", 30)
     .attr("x", 0)
     .attr("y", 0);
 
-  addLabel(svg, 400, 20, "bold", "Sequence Diagram Editor");
+  addLabel(svg, 400, 20, "bold h2", "Sequence Diagram Editor");
 }
 
 function drawToolbox() {
-  drawToolboxRect(svg);
+  drawToolboxRect();
+  drawLifeLineToolboxItem();
+  drawActivationToolboxItem();
+}
 
+function drawLifeLineToolboxItem() {
   // Lifeline toolbox item
   toolBoxLifeLineData.push({ id: "toolbox-lifeline-still", x:toolboxLifeLineX, y: toolboxLifeLineY});
   drawLifeLine(svg, "toolbox-lifeline-still", toolBoxLifeLineData, stillToolboxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
@@ -156,9 +169,6 @@ function drawToolbox() {
   drawLifeLine(svg, "toolbox-lifeline-movable", toolBoxLifeLineData, dragToolBoxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
 
   addLabel(svg, 35, 170, "normal", "Lifeline");
-
-  // Activation toolbox item
-  drawActivationToolboxItem();
 }
 
 function drawActivationToolboxItem() {
@@ -174,15 +184,15 @@ function drawActivationToolboxItem() {
 function drawDrawingCanvas() {
 }
 
-function drawToolboxRect(parent) {
-  parent.append("rect")
+function drawToolboxRect() {
+  svg.append("rect")
      .attr("class", "toolbox-rect")
      .attr("width", 190)
      .attr("height", 1000)
      .attr("x", 0)
      .attr("y", 30);
 
-  addLabel(parent, 65, 60, "bold", "Toolbox");
+  addLabel(svg, 65, 60, "bold h2", "Toolbox");
 }
 
 // Draw lifeline elemtnt in toolbox
@@ -203,7 +213,7 @@ function drawLifeLine(parent, id, data, handler, x, y, width, height, lineHeight
        .attr("y", y);
 
   if(addIdAsLabel) {
-    addLabel(group, x + width/4, y + (height/4)*2.5, "normal", id);
+    addLabel(group, x + width/4, y + (height/4)*2.5, "normal white", id);
   }
 
   lineX = x + width/2;
@@ -236,7 +246,7 @@ function drawLifeLine(parent, id, data, handler, x, y, width, height, lineHeight
 function moveGroup(group, data, d) {
   // Update data item
   d.x = d3.event.x;
-  d.y = lifeLineY;
+  d.y = d3.event.y;
   // Set data item values to element coordinates
   group.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 }
