@@ -38,6 +38,9 @@
     stroke-dasharray: 4,1;
     stroke-width: 1px;
   }
+  .activation-toolbox-item {
+    fill: #181818;
+  }
 
 </style>
 <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -144,6 +147,8 @@ function drawToolbar() {
 
 function drawToolbox() {
   drawToolboxRect(svg);
+
+  // Lifeline toolbox item
   toolBoxLifeLineData.push({ id: "toolbox-lifeline-still", x:toolboxLifeLineX, y: toolboxLifeLineY});
   drawLifeLine(svg, "toolbox-lifeline-still", toolBoxLifeLineData, stillToolboxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
 
@@ -151,6 +156,19 @@ function drawToolbox() {
   drawLifeLine(svg, "toolbox-lifeline-movable", toolBoxLifeLineData, dragToolBoxLifeLine, toolboxLifeLineX, toolboxLifeLineY, 70, 25, 50);
 
   addLabel(svg, 35, 170, "normal", "Lifeline");
+
+  // Activation toolbox item
+  drawActivationToolboxItem();
+}
+
+function drawActivationToolboxItem() {
+  svg.append("rect")
+     .attr("class", "activation-toolbox-item")
+     .attr("width", 15)
+     .attr("height", 50)
+     .attr("x", 140)
+     .attr("y", 80);
+  addLabel(svg, 120, 170, "normal", "Activation");
 }
 
 function drawDrawingCanvas() {
