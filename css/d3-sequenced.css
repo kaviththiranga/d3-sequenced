@@ -25,6 +25,10 @@ body {
 }
 .drawing-canvas {
 }
+.toolbox-frame {
+  fill: transparent;
+  stroke: #181818;
+}
 .rect {
   fill: #0077b3;
   stroke: #181818;
