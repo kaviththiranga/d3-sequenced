@@ -64,15 +64,15 @@ var frameHeight = 200;
 var svg = d3.select("body")
      .append("div")
      .attr("id", "d3-sequenced")
-     //.classed("svg-container", true) //container class to make it responsive
+     .classed("svg-container", true) //container class to make it responsive
      .append("svg")
      .attr("id", "d3-sequenced-window")
-     .attr("width", windowWidth)
-     .attr("height", windowHeight);
+     //.attr("width", windowWidth)
+     //.attr("height", windowHeight)
      // responsive SVG needs these 2 attributes and no width and height attr
-     //.attr("preserveAspectRatio", "xMinYMin meet")
-     //.attr("viewBox", "0 0 1000 800");
-     //.classed("svg-content-responsive", true);
+     .attr("preserveAspectRatio", "xMinYMin meet")
+     .attr("viewBox", "0 0 " + windowWidth + " " + windowHeight)
+     .classed("svg-content-responsive", true);
 
 // Create toolbar --- //
 var toolbar = svg.append("rect")
