@@ -1,46 +1,66 @@
-// Main control flow ---- //
+// Logging properties --- //
 var traceEnabled = true;
 
-var toolBoxLifeLineData = [];
-var toolboxActivationData = [];
-var toolboxFrameData = [];
-var lifeLineData = [];
-var activationData = [];
-
-var toolboxLifeLineX = 20;
-var toolboxLifeLineY = 80;
-var toolboxLifeLineWidth = 70;
-var toolboxLifeLineHeight = 25;
-
-var toolboxActivationX = 140;
-var toolboxActivationY = 80;
-var toolboxActivationWidth = 15;
-var toolboxActivationHeight = 50;
-
-var toolboxFrameX = 20;
-var toolboxFrameY = 200;
-var toolboxFrameWidth = 70;
-var toolboxFrameHeight = 50;
-
+// Window properties --- //
 var windowWidth = 1200;
 var windowHeight = 1000;
 
+// Toolbar properties --- //
 var toolbarX = 0;
 var toolbarY = 0;
 var toolbarWidth = windowWidth;
 var toolbarHeight = 30;
 
+// Toolbox properties --- //
 var toolboxX = 0;
 var toolboxY = toolbarHeight;
 var toolboxWidth = 200;
 var toolboxHeight = windowHeight - toolbarHeight;
 
+// Drawing canvas properties --- //
 var drawingCanvasX = toolboxWidth;
 var drawingCanvasY = toolbarHeight;
 var drawingCanvasWidth = windowWidth - toolboxWidth;
 var drawingCanvasHeight = windowHeight - toolbarHeight;
 
-// Create window svg container ---- //
+// Toolbox lifeline properties --- //
+var toolBoxLifeLineData = [];
+var toolboxLifeLineX = 20;
+var toolboxLifeLineY = 80;
+var toolboxLifeLineWidth = 70;
+var toolboxLifeLineHeight = 25;
+
+// Lifeline properties --- //
+var lifeLineData = [];
+var lifeLineWidth = 100;
+var lifeLineHeight = 30;
+var lifeLineLineHeight = 200;
+
+// Toolbox activation properties --- //
+var toolboxActivationData = [];
+var toolboxActivationX = 140;
+var toolboxActivationY = 80;
+var toolboxActivationWidth = 15;
+var toolboxActivationHeight = 50;
+
+// Activation properties --- //
+var activationData = [];
+var activationWidth = 30;
+var activationHeight = 100;
+
+// Toolbox frame properties --- //
+var toolboxFrameData = [];
+var toolboxFrameX = 20;
+var toolboxFrameY = 200;
+var toolboxFrameWidth = 70;
+var toolboxFrameHeight = 50;
+
+// Frame properties --- //
+var frameData = [];
+var frameWidth = 300;
+var frameHeight = 200;
+
+// Create window svg container --- //
 var svg = d3.select("body")
      .append("div")
      .attr("id", "d3-sequenced")
@@ -54,7 +74,7 @@ var svg = d3.select("body")
      //.attr("viewBox", "0 0 1000 800");
      //.classed("svg-content-responsive", true);
 
-// Create toolbar ---- //
+// Create toolbar --- //
 var toolbar = svg.append("rect")
       .attr("id", "toolbar")
       .attr("class", "toolbar")
@@ -65,7 +85,7 @@ var toolbar = svg.append("rect")
 
      addLabel(svg, 400, 20, "bold h2", "Sequence Diagram Editor");
 
-// Create toolbox ---- //
+// Create toolbox --- //
 var toolbox = svg.append("rect")
       .attr("class", "toolbox")
       .attr("width", toolboxWidth)
@@ -74,7 +94,7 @@ var toolbox = svg.append("rect")
       .attr("y", toolboxY);
 addLabel(svg, 65, 60, "bold h2", "Toolbox");
 
-// Create drawing canvas ---- //
+// Create drawing canvas --- //
 var drawingCanvas = svg.append("svg")
         .attr("class", "drawing-canvas")
         .attr("width", drawingCanvasWidth)
@@ -82,32 +102,8 @@ var drawingCanvas = svg.append("svg")
         .attr("x", drawingCanvasX)
         .attr("y", drawingCanvasY);
 
-
-// Lifeline drag event handler ---- //
-var dragLifeLineOriginCount = 0;
-var lifeLineDragEventHandler = d3.behavior.drag()
-       .origin(function (d) {
-         dragLifeLineOriginCount += 1;
-         if(dragLifeLineOriginCount == 1) {
-           // Due to some reason initial origin needs to be 0,0
-           return { x: 0, y: 0 };
-         }
-         trace("[lifeline] [origin] " + dToString(d));
-         return { x: d.x, y: d.y };
-       })
-       .on("drag", function(d) {
-         trace("[lifeline] [dragging] " + dToString(d));
-         moveGroup(d3.select(this), lifeLineData, d);
-       })
-       .on("dragstart", function(d) {
-         trace("[lifeline] [drag started] " + dToString(d));
-       })
-       .on("dragend", function(d) {
-         trace("[lifeline] [drag ended] " + dToString(d));
-       });
-
-// Toolbox lifeline drag event handler ---- //
-var lifeLineCount = 1;
+// Toolbox lifeline drag event handler --- //
+var lifeLineCount = 0;
 var toolboxLifeLineDragEventHandler = d3.behavior.drag()
   .origin(function (d) {
     trace("[toolbox-lifeline] [origin] " + dToString(d))
@@ -123,45 +119,47 @@ var toolboxLifeLineDragEventHandler = d3.behavior.drag()
   .on("dragend", function(d) {
     trace("[toolbox-lifeline] [drag ended] " + dToString(d));
 
-    // Return the toolbox lifeline back to the origin
+    // Return toolbox lifeline back to its origin
     d3.select("#toolbox-lifeline-movable")
       .attr("transform", function(d) { return "translate(0, 0)"; });
 
     // Draw new lifeline
+    lifeLineCount += 1;
     var id_ = "lifeline-" + lifeLineCount;
     if(lifeLineData.indexOf(id_) < 0) {
-      trace("lifeline not found in data, adding it: " + id_);
+      trace("lifeline not found in lifeLineData[], adding it: " + id_);
       lifeLineData.push({ id: id_, x: d.x, y: d.y });
     }
     drawLifeLine(drawingCanvas, id_, lifeLineData,
       lifeLineDragEventHandler, d.x - toolboxWidth, toolbarHeight,
-      100, 30, 200, true, true);
-    lifeLineCount += 1;
+      lifeLineWidth, lifeLineHeight, lifeLineLineHeight, true, true);
   });
 
-var activationDragEventHandler = d3.behavior.drag();
-    // .origin(function (d) {
-    //   dragActivationOriginCount += 1;
-    //
-    //   if(dragActivationOriginCount == 1) {
-    //     // Due to some reason initial origin needs to be 0,0
-    //     return { x: 0, y: 0 };
-    //   }
-    //   trace("[activation] [origin] " + dToString(d));
-    //   return { x: d.x, y: d.y };
-    // })
-    // .on("drag", function(d) {
-    //   trace("[activation] [dragging] " + dToString(d));
-    //   moveRect(d3.select(this), activationData, d);
-    // })
-    // .on("dragstart", function(d) {
-    //   trace("[activation] [drag started] " + dToString(d));
-    // })
-    // .on("dragend", function(d) {
-    //   trace("[activation] [drag ended] " + dToString(d));
-    // });
+  // Lifeline drag event handler --- //
+  var dragLifeLineOriginCount = 0;
+  var lifeLineDragEventHandler = d3.behavior.drag()
+         .origin(function (d) {
+           dragLifeLineOriginCount += 1;
+           if(dragLifeLineOriginCount == 1) {
+             // Due to some reason initial origin needs to be 0,0
+             return { x: 0, y: 0 };
+           }
+           trace("[lifeline] [origin] " + dToString(d));
+           return { x: d.x, y: d.y };
+         })
+         .on("drag", function(d) {
+           trace("[lifeline] [dragging] " + dToString(d));
+           moveGroup(d3.select(this), lifeLineData, d);
+         })
+         .on("dragstart", function(d) {
+           trace("[lifeline] [drag started] " + dToString(d));
+         })
+         .on("dragend", function(d) {
+           trace("[lifeline] [drag ended] " + dToString(d));
+         });
 
-var activationCount = 1;
+// Toolbox activation drag event handler --- //
+var activationCount = 0;
 var toolboxActivationDragEventHandler = d3.behavior.drag()
     .origin(function (d) {
       trace("[toolbox-activation] [origin] " + dToString(d));
@@ -177,21 +175,46 @@ var toolboxActivationDragEventHandler = d3.behavior.drag()
     .on("dragend", function(d) {
       trace("[toolbox-activation] [drag ended] " + dToString(d));
 
-      // Return the toolbox activation back to the origin
-      //d.x = toolboxActivationX;
-      //d.y = toolboxActivationY;
-      //drawActivation(svg, "toolbox-activation-movable", toolboxActivationData, toolboxActivationX, toolboxActivationY, 15, 50, toolboxActivationDragEventHandler);
+      // Return toolbox lifeline back to its origin
+      d3.select("#toolbox-activation-movable")
+        .attr("transform", function(d) { return "translate(0, 0)"; });
 
       // Draw new lifeline
-      // var id_ = "activation-" + activationCount;
-      // if(activationData.indexOf(id_) < 0) {
-      //   trace("activation not found in data, adding it: " + id_);
-      //   activationData.push({ id: id_, x: d.x, y: d.y });
-      // }
-      //drawActivation(drawingCanvas, id_, activationData, activationDragEventHandler, d.x, d.y, 30, 100);
-      //activationCount += 1;
+      activationCount += 1;
+      var id_ = "activation-" + activationCount;
+      if(activationData.indexOf(id_) < 0) {
+        trace("activation not found in data, adding it: " + id_);
+        activationData.push({ id: id_, x: d.x, y: d.y });
+      }
+      drawActivation(drawingCanvas, id_, activationData,
+        activationDragEventHandler, d.x, d.y, 30, 100);
     });
 
+    // Activation drag event handler --- //
+    var activationDragEventHandler = d3.behavior.drag();
+        // .origin(function (d) {
+        //   dragActivationOriginCount += 1;
+        //
+        //   if(dragActivationOriginCount == 1) {
+        //     // Due to some reason initial origin needs to be 0,0
+        //     return { x: 0, y: 0 };
+        //   }
+        //   trace("[activation] [origin] " + dToString(d));
+        //   return { x: d.x, y: d.y };
+        // })
+        // .on("drag", function(d) {
+        //   trace("[activation] [dragging] " + dToString(d));
+        //   moveRect(d3.select(this), activationData, d);
+        // })
+        // .on("dragstart", function(d) {
+        //   trace("[activation] [drag started] " + dToString(d));
+        // })
+        // .on("dragend", function(d) {
+        //   trace("[activation] [drag ended] " + dToString(d));
+        // });
+
+// Toolbox frame drag event handler --- //
+var frameCount = 0;
     var toolboxFrameDragEventHandler = d3.behavior.drag()
         .origin(function (d) {
           trace("[toolbox-frame] [origin] " + dToString(d));
@@ -206,19 +229,58 @@ var toolboxActivationDragEventHandler = d3.behavior.drag()
         })
         .on("dragend", function(d) {
           trace("[toolbox-frame] [drag ended] " + dToString(d));
+
+          // Move toolbox frame back to its origin
+          d3.select("#toolbox-frame-movable")
+            .attr("transform", function(d) { return "translate(0, 0)"; });
+
+          frameCount += 1;
+          var id_ = "frame-" + frameCount;
+          if(frameCount == 1) {
+            frameData.push({ id: id_, x: d.x, y: d.y });
+          }
+          drawFrame(drawingCanvas, id_, frameData, d.x - toolboxWidth,
+            d.y + toolbarHeight, frameWidth, frameHeight, frameDragEventHandler);
         });
 
+var frameDragEventHandler = d3.behavior.drag();
+
+// Frame drag event handler --- //
+var frameDragOriginCount = 0;
+var frameDragEventHandler = d3.behavior.drag()
+       .origin(function (d) {
+         frameDragOriginCount += 1;
+         if(frameDragOriginCount == 1) {
+           // Due to some reason initial origin needs to be 0,0
+           return { x: 0, y: 0 };
+         }
+         trace("[frame] [origin] " + dToString(d));
+         return { x: d.x, y: d.y };
+       })
+       .on("drag", function(d) {
+         trace("[frame] [dragging] " + dToString(d));
+         moveGroup(d3.select(this), frameData, d);
+       })
+       .on("dragstart", function(d) {
+         trace("[frame] [drag started] " + dToString(d));
+       })
+       .on("dragend", function(d) {
+         trace("[frame] [drag ended] " + dToString(d));
+         d3.select("#" + d.id).attr("x", toolboxFrameX).attr("y", toolboxFrameY);
+       });
+
+// Still event handlers --- //
 var stillLifeLineEventHandler = d3.behavior.drag();
 var stillActivationEventHandler = d3.behavior.drag();
 var stillFrameEventHandler = d3.behavior.drag();
 
-drawLifeLineToolboxItem();
-drawActivationToolboxItem();
-drawFrameToolboxItem();
+// Draw toolbox items --- //
+drawToolboxLifeLine();
+drawToolboxActivation();
+drawToolboxFrame();
 
-// Functions ---- //
-function drawLifeLineToolboxItem() {
-  // Lifeline toolbox item
+// Draw toolbox lifeline --- //
+function drawToolboxLifeLine() {
   toolBoxLifeLineData.push({ id: "toolbox-lifeline-still", x:toolboxLifeLineX,
     y: toolboxLifeLineY});
   drawLifeLine(svg, "toolbox-lifeline-still", toolBoxLifeLineData,
@@ -232,7 +294,8 @@ function drawLifeLineToolboxItem() {
   addLabel(svg, 35, 170, "normal", "Lifeline");
 }
 
-function drawActivationToolboxItem() {
+// Draw toolbox activation
+function drawToolboxActivation() {
   toolboxActivationData.push({ id: "toolbox-activation-still", x: toolboxActivationX,
     y: toolboxActivationY});
   drawActivation(svg, "toolbox-activation-still", toolboxActivationData,
@@ -248,7 +311,8 @@ function drawActivationToolboxItem() {
   addLabel(svg, 120, 170, "normal", "Activation");
 }
 
-function drawFrameToolboxItem() {
+// Draw toolbox frame
+function drawToolboxFrame() {
   toolboxFrameData.push({ id: "toolbox-frame-still", x: toolboxFrameX, y: toolboxFrameY });
     drawFrame(svg, "toolbox-frame-still", toolboxFrameData, toolboxFrameX, toolboxFrameY,
     toolboxFrameWidth, toolboxFrameHeight, stillFrameEventHandler);
@@ -260,23 +324,22 @@ function drawFrameToolboxItem() {
   addLabel(svg, 40, 270, "normal", "Frame");
 }
 
+// Draw activation
 function drawActivation(parent, id, data, x, y, width, height, dragEventHandler) {
-  parent.append("rect")
-     .data(data)
-     .attr("id", id)
-     .attr("class", "activation-toolbox-item")
-     .attr("x", x)
-     .attr("y", y)
-     .attr("width", width)
-     .attr("height", height)
-     .call(dragEventHandler);
+  drawRect(parent, id, "toolbox-activation", data, x, y, width, height, dragEventHandler);
 }
 
+// Draw frame
 function drawFrame(parent, id, data, x, y, width, height, dragEventHandler) {
+  drawRect(parent, id, "toolbox-frame", data, x, y, width, height, dragEventHandler);
+}
+
+// Draw rectangle
+function drawRect(parent, id, class_, data, x, y, width, height, dragEventHandler) {
   parent.append("rect")
      .data(data)
      .attr("id", id)
-     .attr("class", "toolbox-frame")
+     .attr("class", class_)
      .attr("x", x)
      .attr("y", y)
      .attr("width", width)
@@ -284,8 +347,9 @@ function drawFrame(parent, id, data, x, y, width, height, dragEventHandler) {
      .call(dragEventHandler);
 }
 
-// Draw lifeline elemtnt in toolbox
-function drawLifeLine(parent, id, data, dragEventHandler, x, y, width, height, lineHeight, addCloseButton, addIdAsLabel) {
+// Draw lifeline element
+function drawLifeLine(parent, id, data, dragEventHandler, x, y, width, height,
+  lineHeight, addCloseButton, addIdAsLabel) {
 
   group = parent.selectAll("g")
         .data(data)
@@ -317,7 +381,7 @@ function drawLifeLine(parent, id, data, dragEventHandler, x, y, width, height, l
        .attr("y2", lineY2);
 
   if(addCloseButton) {
-    // Close icon
+    // Add close button icon
     group.append('text')
          .attr("x", lineX + width/2)
          .attr("y", y)
@@ -332,19 +396,17 @@ function drawLifeLine(parent, id, data, dragEventHandler, x, y, width, height, l
     }
 }
 
+// Move group to new cursor position
 function moveGroup(group, data, d) {
-  // Update data item
-  d.x = d3.event.x;
-  d.y = d3.event.y;
-  // Set data item values to element coordinates
-  group.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  moveRect(group, data, d);
 }
 
+// Move rectangle to cursor position
 function moveRect(rect, data, d) {
   // Update data item
   d.x = d3.event.x;
   d.y = d3.event.y;
-
+  // Set data item values to element coordinates
   rect.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 }
 
@@ -370,10 +432,12 @@ function addTextField(parent, x, y, class_, text) {
      .on("keyup", function(d) { d.text = d3.select(this).text(); });
 }
 
+// Prepare string representation of the data element (d)
 function dToString(d) {
   return "id: " + d.id + " x: " + d.x + " y: " + d.y;
 }
 
+// Print trace logs
 function trace(value) {
   if(traceEnabled) {
     console.log(new Date() + " [TRACE] " + value);
