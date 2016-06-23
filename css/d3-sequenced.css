@@ -29,11 +29,21 @@ body {
 }
 .drawing-canvas {
 }
+.toolbox-activation {
+  fill: #262626;
+}
+.activation {
+  fill: #262626;
+}
 .toolbox-frame {
   fill: transparent;
   stroke: #181818;
 }
-.rect {
+.frame {
+  fill: transparent;
+  stroke: #181818;
+}
+.lifeline-rect {
   fill: #0088CC;
   stroke: #181818;
   opacity: 0.7;
@@ -41,13 +51,13 @@ body {
   cursor: move;
   pointer-events: all;
 }
-.rect .text {
+.lifeline-rect .text {
   color: #FFF;
 }
 .rect-marker {
   fill: #3C3C3C;
 }
-.line {
+.lifeline-line {
   stroke: #181818;
   stroke-dasharray: 4,1;
   stroke-width: 1.5px;
