@@ -2,8 +2,8 @@
 var traceEnabled = true;
 
 // Window properties --- //
-var windowWidth = 1200;
-var windowHeight = 1000;
+var windowWidth = 1000;
+var windowHeight = 800;
 
 // Toolbar properties --- //
 var toolbarX = 0;
@@ -16,6 +16,10 @@ var toolboxX = 0;
 var toolboxY = toolbarHeight;
 var toolboxWidth = 200;
 var toolboxHeight = windowHeight - toolbarHeight;
+var toolboxHeaderX = 0;
+var toolboxHeaderY = toolbarHeight;
+var toolboxHeaderWidth = 200;
+var toolboxHeaderHeight = 25;
 
 // Drawing canvas properties --- //
 var drawingCanvasX = toolboxWidth;
@@ -67,8 +71,6 @@ var svg = d3.select("body")
      .classed("svg-container", true) //container class to make it responsive
      .append("svg")
      .attr("id", "d3-sequenced-window")
-     //.attr("width", windowWidth)
-     //.attr("height", windowHeight)
      // responsive SVG needs these 2 attributes and no width and height attr
      .attr("preserveAspectRatio", "xMinYMin meet")
      .attr("viewBox", "0 0 " + windowWidth + " " + windowHeight)
@@ -83,7 +85,7 @@ var toolbar = svg.append("rect")
       .attr("x", toolbarX)
       .attr("y", toolbarY);
 
-     addLabel(svg, 400, 20, "bold h2", "Sequence Diagram Editor");
+     addLabel(svg, 400, 20, "bold h2 white", "Sequence Diagram Editor");
 
 // Create toolbox --- //
 var toolbox = svg.append("rect")
@@ -92,7 +94,15 @@ var toolbox = svg.append("rect")
       .attr("height", toolboxHeight)
       .attr("x", toolboxX)
       .attr("y", toolboxY);
-addLabel(svg, 65, 60, "bold h2", "Toolbox");
+
+var toolboxHeader = svg.append("rect")
+      .attr("class", "toolbox-header")
+      .attr("width", toolboxHeaderWidth)
+      .attr("height", toolboxHeaderHeight)
+      .attr("x", toolboxHeaderX)
+      .attr("y", toolboxHeaderY);
+
+addLabel(svg, 65, 45, "bold h2", "Toolbox");
 
 // Create drawing canvas --- //
 var drawingCanvas = svg.append("svg")
@@ -366,7 +376,7 @@ function drawLifeLine(parent, id, data, dragEventHandler, x, y, width, height,
        .attr("y", y);
 
   if(addIdAsLabel) {
-    addLabel(group, x + width/4, y + (height/4)*2.5, "normal white", id);
+    addLabel(group, x + width/4, y + (height/4)*2.5, "normal", id);
   }
 
   lineX = x + width/2;
