@@ -68,7 +68,7 @@ var svg = d3.select("body")
     .append("div")
     .attr("id", "d3-sequenced")
     .classed("svg-container", true) //container class to make it responsive
-    .append("svg")
+    .append("svg:svg")
     .attr("id", "d3-sequenced-window")
     // responsive SVG needs these 2 attributes and no width and height attr
     .attr("preserveAspectRatio", "xMinYMin meet")
@@ -112,121 +112,129 @@ var drawingCanvas = svg.append("svg")
     .attr("y", drawingCanvasY);
 
 createElement("lifeline", "Lifeline", "toolbox-lifeline", "lifeline",
-  drawLifeLine, toolboxLifeLineData, lifeLineData, toolboxLifeLineX,
-  toolboxLifeLineY, toolboxLifeLineWidth,
-  toolboxLifeLineHeight, lifeLineWidth, lifeLineHeight);
+    drawLifeLine, toolboxLifeLineData, lifeLineData, toolboxLifeLineX,
+    toolboxLifeLineY, toolboxLifeLineWidth,
+    toolboxLifeLineHeight, lifeLineWidth, lifeLineHeight);
 
 createElement("activation", "Activation", "toolbox-activation", "activation",
-  drawRect, toolboxActivationData, activationData, toolboxActivationX,
-  toolboxActivationY, toolboxActivationWidth,
-  toolboxActivationHeight, activationWidth, activationHeight);
+    drawRect, toolboxActivationData, activationData, toolboxActivationX,
+    toolboxActivationY, toolboxActivationWidth,
+    toolboxActivationHeight, activationWidth, activationHeight);
 
 createElement("frame", "Frame", "toolbox-frame", "frame",
-  drawRect, toolboxFrameData, frameData, toolboxFrameX,
-  toolboxFrameY, toolboxFrameWidth,
-  toolboxFrameHeight, frameWidth, frameHeight);
+    drawRect, toolboxFrameData, frameData, toolboxFrameX,
+    toolboxFrameY, toolboxFrameWidth,
+    toolboxFrameHeight, frameWidth, frameHeight);
 
 function createElement(elementName, elementLabel, toolboxClass, elementClass,
-  drawElementMethod, toolboxDataArray, dataArray, toolboxElementX, toolboxElementY,
-  toolboxElementWidth, toolboxElementHeight, elementWidth, elementHeight) {
+    drawElementMethod, toolboxDataArray, dataArray, toolboxElementX, toolboxElementY,
+    toolboxElementWidth, toolboxElementHeight, elementWidth, elementHeight) {
 
-  // Element drag event handler --- //
-  var dragElementOriginCount = 0;
-  var elementDragEventHandler = d3.behavior.drag()
-      .origin(function(d) {
-          dragElementOriginCount += 1;
-          if (dragElementOriginCount == 1) {
-              // Due to some reason initial origin needs to be 0,0
-              return {
-                  x: 0,
-                  y: 0
-              };
-          }
-          trace("[" + elementName + "] [origin] " + dToString(d));
-          return {
-              x: d.x,
-              y: d.y
-          };
-      })
-      .on("drag", function(d) {
-          trace("[" + elementName + "] [dragging] " + dToString(d));
-          moveElement(d3.select(this), dataArray, d);
-      })
-      .on("dragstart", function(d) {
-          trace("[" + elementName + "] [drag started] " + dToString(d));
-      })
-      .on("dragend", function(d) {
-          trace("[" + elementName + "] [drag ended] " + dToString(d));
-      });
+    // Element drag event handler --- //
+    var elementDragEventHandler = d3.behavior.drag()
+        .origin(function (d) {
+            d.originInvocationCount += 1;
+            if (d.originInvocationCount == 1) {
+                // Due to some reason initial origin needs to be 0,0
+                trace("Origin: { x:0, y:0 }")
+                return {
+                    x: 0,
+                    y: 0
+                };
+            }
+            trace("Origin: " + dToString(d));
+            return {
+                x: d.x,
+                y: d.y
+            };
+        })
+        .on("drag", function (d) {
+            //trace("Dragging element: " + dToString(d));
+            moveElement(d3.select(this), dataArray, d);
+        })
+        .on("dragstart", function (d) {
+            trace("Drag started: " + dToString(d));
+        })
+        .on("dragend", function (d) {
+            trace("Drag ended: " + dToString(d));
+        });
 
     // Toolbox element drag event handler --- //
     var elementCount = 0;
     var toolboxElementDragEventHandler = d3.behavior.drag()
-        .origin(function(d) {
-            trace("[toolbox-" + elementName + "] [origin] " + dToString(d))
+        .origin(function (d) {
+            trace("Origin: " + dToString(d))
             return {
-                x: 0,
-                y: 0
+                x: toolboxElementX,
+                y: toolboxElementY
             };
         })
-        .on("drag", function(d) {
-            trace("[toolbox-" + elementName + "] [dragging] " + dToString(d));
-            moveElement(d3.select("#toolbox-" + elementName + "-movable"),
-            toolboxDataArray, d);
+        .on("drag", function (d) {
+            trace("Dragging element: " + dToString(d));
+            var element = d3.select("#toolbox-" + elementName + "-movable");
+            moveToolboxElement(element, d, toolboxElementX, toolboxElementY);
         })
-        .on("dragstart", function(d) {
-            trace("[toolbox-" + elementName + "] [drag started] " + dToString(d));
+        .on("dragstart", function (d) {
+            trace("Drag started: " + dToString(d));
         })
-        .on("dragend", function(d) {
-            trace("[toolbox-" + elementName + "] [drag ended] " + dToString(d));
+        .on("dragend", function (d) {
+            trace("Drag ended: " + dToString(d));
 
             // Return toolbox element back to its origin
             d3.select("#toolbox-" + elementName + "-movable")
-                .attr("transform", function(d) {
+                .attr("transform", function (d) {
                     return "translate(0, 0)";
                 });
 
-            // Draw new element
+            // Calculate relative coordinates
+            d.x = d.x - (toolboxWidth - toolboxElementX);
+            d.y = d.y + (toolboxElementY - toolbarHeight);
+            
             elementCount += 1;
             var id_ = elementName + "-" + elementCount;
             if (dataArray.indexOf(id_) < 0) {
-                trace(elementLabel + " not found in data array[], adding it: " + id_);
+                trace(elementLabel + " not found in data array[], adding it: " + dToString(d));
                 dataArray.push({
                     id: id_,
                     x: d.x,
-                    y: d.y
+                    y: d.y,
+                    originInvocationCount: 0
                 });
             }
+            
+            // Draw new element
             drawElementMethod(drawingCanvas, id_, elementClass, dataArray,
-                d.x, d.y + toolbarHeight, elementWidth, elementHeight,
+                d.x, d.y, elementWidth, elementHeight,
                 elementDragEventHandler, false);
         });
 
-        // Create toolbox item
-        var stillElementId = "toolbox-" + elementName + "-still";
-        var stillElementEventHandler = d3.behavior.drag();
-        toolboxDataArray.push({
-          id: stillElementId,
-          x: toolboxElementX,
-          y: toolboxElementY
-        });
-        drawElementMethod(svg, stillElementId, toolboxClass, toolboxDataArray,
-            toolboxElementX, toolboxElementY, toolboxElementWidth,
-            toolboxElementHeight, stillElementEventHandler, true);
+    // Create toolbox item
+    var stillElementId = "toolbox-" + elementName + "-still";
+    var stillElementEventHandler = d3.behavior.drag();
+    toolboxDataArray.push({
+        id: stillElementId,
+        x: toolboxElementX,
+        y: toolboxElementY,
+        originInvocationCount: 0
+    });
+    drawElementMethod(svg, stillElementId, toolboxClass, toolboxDataArray,
+        toolboxElementX, toolboxElementY, toolboxElementWidth,
+        toolboxElementHeight, stillElementEventHandler, true);
 
-        var movableElementId = "toolbox-" + elementName + "-movable";
-        toolboxDataArray.push({
-            id: movableElementId,
-            x: toolboxX,
-            y: toolboxY
-        });
-        drawElementMethod(svg, movableElementId, toolboxClass, toolboxDataArray,
-            toolboxElementX, toolboxElementY, toolboxElementWidth,
-            toolboxElementHeight, toolboxElementDragEventHandler, true);
+    var movableElementId = "toolbox-" + elementName + "-movable";
+    toolboxDataArray.push({
+        id: movableElementId,
+        x: toolboxX,
+        y: toolboxY,
+        originInvocationCount: 0
+    });
+    drawElementMethod(svg, movableElementId, toolboxClass, toolboxDataArray,
+        toolboxElementX, toolboxElementY, toolboxElementWidth,
+        toolboxElementHeight, toolboxElementDragEventHandler, true);
 
-        var labelX = toolboxElementX + (toolboxElementWidth / 2) - 20;
-        var labelY = toolboxElementY + toolboxElementHeight + 20;
-        addLabel(svg, labelX, labelY, "normal", elementLabel);
+    var labelX = toolboxElementX + (toolboxElementWidth / 2) - 20;
+    var labelY = toolboxElementY + toolboxElementHeight + 20;
+    addLabel(svg, labelX, labelY, "normal", elementLabel);
 }
 
 // Draw rectangle
@@ -240,15 +248,20 @@ function drawRect(parent, id, class_, data, x, y, width, height, dragEventHandle
         .attr("width", width)
         .attr("height", height)
         .call(dragEventHandler);
+
+    trace("Rectangle drawn: [id]: " + id + " [x]: " + y + " [y]: " + y)
 }
 
 // Draw lifeline element
-function drawLifeLine(parent, id, class_, data, x, y, width, height, dragEventHandler, isToolboxElement) {
+function drawLifeLine(parent, id, class_, data, x, y, width, height,
+    dragEventHandler, isToolboxElement) {
 
-    if(isToolboxElement) {
-      rectHeight = height * 30/100;
+    trace("Lifeline to be drawn: [id]: " + id + " [x]: " + x + " [y]: " + y);
+
+    if (isToolboxElement) {
+        rectHeight = height * 30 / 100;
     } else {
-      rectHeight = height * 10/100;
+        rectHeight = height * 10 / 100;
     }
     var lineHeight = height - rectHeight;
 
@@ -262,10 +275,10 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height, dragEventHa
 
     group.append("rect")
         .attr("class", "lifeline-rect")
-        .attr("width", width)
-        .attr("height", rectHeight)
         .attr("x", x)
-        .attr("y", y);
+        .attr("y", y)
+        .attr("width", width)
+        .attr("height", rectHeight);
 
     if (!isToolboxElement) {
         addLabel(group, x + width / 3, y + 20, "normal", id);
@@ -291,22 +304,35 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height, dragEventHa
             .attr('dominant-baseline', 'central')
             .style('font-family', 'font-wso2')
             .style('font-size', '14px')
-            .text(function(d) {
+            .text(function (d) {
                 return '\ue630';
             })
-            .on("click", function(d) {
+            .on("click", function (d) {
                 svg.selectAll("#" + id).remove()
             });
     }
+    trace("Lifeline drawn: [id]: " + id + " [x]: " + x + " [y]: " + y);
 }
 
 // Move rectangle to cursor position
-function moveElement(rect, data, d) {
+function moveToolboxElement(rect, d, toolboxElementX, toolboxElementY) {
     // Update data item
-    d.x = d3.event.x;
-    d.y = d3.event.y;
+    d.x = d3.event.x - toolboxElementX;
+    d.y = d3.event.y - toolboxElementY;
     // Set data item values to element coordinates
-    rect.attr("transform", function(d) {
+    rect.attr("transform", function (d) {
+        return "translate(" + d.x + "," + d.y + ")";
+    });
+}
+
+function moveElement(rect, data, d) {
+    // Update data item, restrict the movement to drawing canvas
+    trace("Moving element: " + dToString(d) + " d3.event.x: " + d3.event.x + " " + d3.event.y);
+
+    d.x = d3.event.x; //Math.max(0, Math.max(toolboxWidth, d3.event.x));
+    d.y = d3.event.y; //Math.max(0, Math.max(0, d3.event.y));
+    // Set data item values to element coordinates
+    rect.attr("transform", function (d) {
         return "translate(" + d.x + "," + d.y + ")";
     });
 }
@@ -321,27 +347,27 @@ function addLabel(parent, x, y, class_, text) {
 }
 
 // Add a text field to an element
-function addTextField(parent, x, y, class_, text) {
-    data = [{
-        text: "Lifeline"
-    }];
-    parent.append("text")
-        .attr("class", class_)
-        .attr("x", x)
-        .attr("y", y)
-        .attr("contenteditable", true)
-        .data(data)
-        .text(function(d) {
-            return d.text
-        })
-        .on("keyup", function(d) {
-            d.text = d3.select(this).text();
-        });
-}
+// function addTextField(parent, x, y, class_, text) {
+//     data = [{
+//         text: "Lifeline"
+//     }];
+//     parent.append("text")
+//         .attr("class", class_)
+//         .attr("x", x)
+//         .attr("y", y)
+//         .attr("contenteditable", true)
+//         .data(data)
+//         .text(function (d) {
+//             return d.text
+//         })
+//         .on("keyup", function (d) {
+//             d.text = d3.select(this).text();
+//         });
+// }
 
 // Prepare string representation of the data element (d)
 function dToString(d) {
-    return "id: " + d.id + " x: " + d.x + " y: " + d.y;
+    return "[id] " + d.id + " [x] " + d.x + " [y] " + d.y;
 }
 
 // Print trace logs
