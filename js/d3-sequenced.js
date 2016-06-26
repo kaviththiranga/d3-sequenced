@@ -290,8 +290,8 @@ function mousedown() {
     d3.select("#lifelife-1").on('mousedown', null);
     
     var m = d3.mouse(this);
-    var x = m[0];// + toolboxWidth;
-    var y = m[1];// - toolbarHeight;
+    var x = Math.max(drawingCanvasX + 5, m[0]);
+    var y = Math.max(drawingCanvasY + 5, m[1]);
    
     drawArrowLine(x, y, x, y);
     svg.on("mousemove", mousemove);
@@ -302,8 +302,8 @@ function mousemove() {
     var y1 = line.attr("y1");
     
     var m = d3.mouse(this);
-    var x2 = m[0];// + toolboxWidth;
-    var y2 = m[1];// + toolbarHeight;
+    var x2 = Math.max(drawingCanvasX + 5, m[0]);
+    var y2 = Math.max(drawingCanvasY + 5, m[1]);
     
     line.attr("x2", x2)
         .attr("y2", y2);
