@@ -63,6 +63,8 @@ var frameData = [];
 var frameWidth = 300;
 var frameHeight = 200;
 
+toolboxArrowActivated = false;
+
 // Create window svg container --- //
 var svg = d3.select("body")
     .append("div")
@@ -142,13 +144,10 @@ createElement("frame", "Frame", "toolbox-frame", "frame",
     toolboxFrameY, toolboxFrameWidth,
     toolboxFrameHeight, frameWidth, frameHeight);
     
-toolboxArrowSelected = false;
 drawArrowLine(120, 220, 175, 220, function () {
-    if(toolboxArrowSelected) {
-       toolboxArrowSelected = false; 
+    if(toolboxArrowActivated) {
        deactivateArrowLines();
     } else {
-       toolboxArrowSelected = true;
        activateArrowLines();
     }
 });
@@ -178,6 +177,9 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
         })
         .on("drag", function (d) {
             //trace("Dragging element: " + dToString(d));
+            if(toolboxArrowActivated) {
+                return;
+            }
             moveElement(d3.select(this), dataArray, d);
         })
         .on("dragstart", function (d) {
@@ -198,6 +200,9 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
             };
         })
         .on("drag", function (d) {
+            if(toolboxArrowActivated) {
+                return;
+            }
             trace("Dragging element: " + dToString(d));
             var element = d3.select("#toolbox-" + elementName + "-movable");
             moveToolboxElement(element, d, toolboxElementX, toolboxElementY);
@@ -268,12 +273,14 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
 function activateArrowLines() {
     svg.on("mousedown", mousedown);
     svg.on("mouseup", mouseup);
+    toolboxArrowActivated = true;
     trace("Arrow lines activated");
 }
 
 function deactivateArrowLines() {
     svg.on("mousedown", null);
     svg.on("mouseup", null);
+    toolboxArrowActivated = false;
     trace("Arrow lines de-activated");
 }
 
