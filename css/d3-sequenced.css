@@ -27,8 +27,6 @@ body {
 .toolbox-header {
   fill: #A3A3A3;
 }
-.drawing-canvas {
-}
 .toolbox-activation {
   fill: #262626;
 }
@@ -41,6 +39,9 @@ body {
 }
 .frame {
   fill: transparent;
+  stroke: #181818;
+}
+.arrow-line {
   stroke: #181818;
 }
 .lifeline-rect {

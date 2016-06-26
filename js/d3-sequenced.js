@@ -111,6 +111,22 @@ var drawingCanvas = svg.append("svg")
     .attr("x", drawingCanvasX)
     .attr("y", drawingCanvasY);
 
+// Define marker    
+var marker = drawingCanvas.append("svg:defs")
+    .append("svg:marker")
+    .attr("id", "triangle")
+    .attr("viewBox", "0 0 10 10")
+    .attr("refX", 0)
+    .attr("refY", 5)
+    .attr("markerUnits", "strokeWidth")
+    .attr("markerWidth", 8)
+    .attr("markerHeight", 15)
+    .attr("orient", "auto");
+
+// Define marker path
+var markerPath = marker.append("svg:path")
+    .attr("d", "M 0 0 L 10 5 L 0 10 z");
+
 createElement("lifeline", "Lifeline", "toolbox-lifeline", "lifeline",
     drawLifeLine, toolboxLifeLineData, lifeLineData, toolboxLifeLineX,
     toolboxLifeLineY, toolboxLifeLineWidth,
@@ -125,6 +141,18 @@ createElement("frame", "Frame", "toolbox-frame", "frame",
     drawRect, toolboxFrameData, frameData, toolboxFrameX,
     toolboxFrameY, toolboxFrameWidth,
     toolboxFrameHeight, frameWidth, frameHeight);
+    
+toolboxArrowSelected = false;
+drawArrowLine(120, 220, 175, 220, function () {
+    if(toolboxArrowSelected) {
+       toolboxArrowSelected = false; 
+       deactivateArrowLines();
+    } else {
+       toolboxArrowSelected = true;
+       activateArrowLines();
+    }
+});
+addLabel(svg, 120, 270, "normal", "Arrow Line");
 
 function createElement(elementName, elementLabel, toolboxClass, elementClass,
     drawElementMethod, toolboxDataArray, dataArray, toolboxElementX, toolboxElementY,
@@ -189,7 +217,7 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
             // Calculate relative coordinates
             d.x = d.x - (toolboxWidth - toolboxElementX);
             d.y = d.y + (toolboxElementY - toolbarHeight);
-            
+
             elementCount += 1;
             var id_ = elementName + "-" + elementCount;
             if (dataArray.indexOf(id_) < 0) {
@@ -201,7 +229,7 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
                     originInvocationCount: 0
                 });
             }
-            
+
             // Draw new element
             drawElementMethod(drawingCanvas, id_, elementClass, dataArray,
                 d.x, d.y, elementWidth, elementHeight,
@@ -235,6 +263,56 @@ function createElement(elementName, elementLabel, toolboxClass, elementClass,
     var labelX = toolboxElementX + (toolboxElementWidth / 2) - 20;
     var labelY = toolboxElementY + toolboxElementHeight + 20;
     addLabel(svg, labelX, labelY, "normal", elementLabel);
+}
+
+function activateArrowLines() {
+    svg.on("mousedown", mousedown);
+    svg.on("mouseup", mouseup);
+    trace("Arrow lines activated");
+}
+
+function deactivateArrowLines() {
+    svg.on("mousedown", null);
+    svg.on("mouseup", null);
+    trace("Arrow lines de-activated");
+}
+
+var line;
+function mousedown() {
+    console.log("mousedown trigerred");
+    d3.select("#lifelife-1").on('mousedown', null);
+    
+    var m = d3.mouse(this);
+    var x = m[0];// + toolboxWidth;
+    var y = m[1];// - toolbarHeight;
+   
+    drawArrowLine(x, y, x, y);
+    svg.on("mousemove", mousemove);
+}
+
+function mousemove() {
+    var x1 = line.attr("x1");
+    var y1 = line.attr("y1");
+    
+    var m = d3.mouse(this);
+    var x2 = m[0];// + toolboxWidth;
+    var y2 = m[1];// + toolbarHeight;
+    
+    line.attr("x2", x2)
+        .attr("y2", y2);
+    trace("drawing arrow line: [x1] " + x1 + " [y1] " + y1 + " [x2] " + x2 + " [y2] " + y2);
+}
+
+function mouseup() {
+    console.log("mouseup trigerred");    
+    svg.on("mousemove", null);
+    deactivateArrowLines();
+    
+    var x1 = line.attr("x1");
+    var y1 = line.attr("y1");
+    var x2 = line.attr("x2");
+    var y2 = line.attr("y2");
+    trace("arrow line drawn from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ")")
 }
 
 // Draw rectangle
@@ -312,6 +390,17 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height,
             });
     }
     trace("Lifeline drawn: [id]: " + id + " [x]: " + x + " [y]: " + y);
+}
+
+function drawArrowLine(x1, y1, x2, y2, clickEventHandler) {
+    line = svg.append("line")
+        .attr("class", "arrow-line")
+        .attr("x1", x1)
+        .attr("y1", y1)
+        .attr("x2", x2)
+        .attr("y2", y2)
+        .attr("marker-end", "url(#triangle)")
+        .on("click", clickEventHandler);
 }
 
 // Move rectangle to cursor position
