@@ -103,7 +103,7 @@ var toolboxHeader = svg.append("rect")
     .attr("x", toolboxHeaderX)
     .attr("y", toolboxHeaderY);
 
-addLabel(svg, 65, 45, "bold h2", "Toolbox");
+addLabel(svg, 65, 47, "bold h2", "Toolbox");
 
 // Create drawing canvas --- //
 var drawingCanvas = svg.append("svg")

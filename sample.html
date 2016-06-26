@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<!-- Drawing Arrow Lines -->
+<!-- Credit: http://stackoverflow.com/questions/18273884/live-drawing-of-a-line-in-d3-js -->
+<style>
+    marker {
+        fill: steelblue;
+    }
+    
+    line {
+        stroke: steelblue;
+        stroke-width: 2px;
+        stroke-linecap: round;
+        marker-end: url(#triangle);
+    }
+</style>
+
+<body>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+        var line;
+        // Create svg
+        var svg = d3.select("body").append("svg")
+           .attr("width", 1000)
+           .attr("height", 600)
+           .on("mousedown", mousedown)
+           .on("mouseup", mouseup);
+        
+        // Define marker    
+        var marker = svg.append("svg:defs")
+            .append("svg:marker")
+            .attr("id", "triangle")
+            .attr("viewBox", "0 0 10 10")
+            .attr("refX", 0)
+            .attr("refY", 5)
+            .attr("markerUnits", "strokeWidth")
+            .attr("markerWidth", 8)
+            .attr("markerHeight", 15)
+            .attr("orient", "auto");
+            
+        // Define marker path
+        var markerPath = marker.append("svg:path")
+            .attr("d", "M 0 0 L 10 5 L 0 10 z");
+            
+        function mousedown() {
+            console.log("mousedown trigerred");
+            
+            var m = d3.mouse(this);
+            line = svg.append("line")
+                .attr("x1", m[0])
+                .attr("y1", m[1])
+                .attr("x2", m[0])
+                .attr("y2", m[1])
+                .attr("marker-end", "url(#triangle)")
+                .on("double-click", function() {
+                   d3.select(this).remove(); 
+                });
+
+            svg.on("mousemove", mousemove);
+        }
+
+        function mousemove() {
+            var m = d3.mouse(this);
+            line.attr("x2", m[0])
+                .attr("y2", m[1]);
+            console.log("mousemove: [x] " + m[0] + " [y]" + m[1]);
+        }
+
+        function mouseup() {
+            console.log("mouseup trigerred");
+            svg.on("mousemove", null);
+        }
+    </script>
+</body>
