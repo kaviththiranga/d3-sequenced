@@ -48,8 +48,8 @@ var toolboxActivationHeight = 50;
 
 // Activation properties --- //
 var activationData = [];
-var activationWidth = 20;
-var activationHeight = 70;
+var activationWidth = 15;
+var activationHeight = 50;
 
 // Toolbox frame properties --- //
 var toolboxFrameData = [];
@@ -144,14 +144,15 @@ createElement("frame", "Frame", "toolbox-frame", "frame",
     toolboxFrameY, toolboxFrameWidth,
     toolboxFrameHeight, frameWidth, frameHeight);
     
-drawArrowLine(120, 220, 175, 220, function () {
+drawArrowLine("toolbox-arrow-line", 120, 220, 175, 220);
+addLabel(svg, 120, 270, "normal", "Arrow Line")
+    .on("click", function () {
     if(toolboxArrowActivated) {
        deactivateArrowLines();
     } else {
        activateArrowLines();
     }
 });
-addLabel(svg, 120, 270, "normal", "Arrow Line");
 
 function createElement(elementName, elementLabel, toolboxClass, elementClass,
     drawElementMethod, toolboxDataArray, dataArray, toolboxElementX, toolboxElementY,
@@ -285,15 +286,18 @@ function deactivateArrowLines() {
 }
 
 var line;
+var arrowLineCount = 1;
 function mousedown() {
     console.log("mousedown trigerred");
-    d3.select("#lifelife-1").on('mousedown', null);
     
     var m = d3.mouse(this);
     var x = Math.max(drawingCanvasX + 5, m[0]);
     var y = Math.max(drawingCanvasY + 5, m[1]);
    
-    drawArrowLine(x, y, x, y);
+    id = "arrow-line-" + arrowLineCount;
+    arrowLineCount += 1;
+    
+    drawArrowLine(id, x, y, x, y);
     svg.on("mousemove", mousemove);
 }
 
@@ -315,11 +319,19 @@ function mouseup() {
     svg.on("mousemove", null);
     deactivateArrowLines();
     
-    var x1 = line.attr("x1");
-    var y1 = line.attr("y1");
-    var x2 = line.attr("x2");
-    var y2 = line.attr("y2");
-    trace("arrow line drawn from (" + x1 + "," + y1 + ") to (" + x2 + "," + y2 + ")")
+    var x1 = parseInt(line.attr("x1"));
+    var y = parseInt(line.attr("y1"));
+    var x2 = parseInt(line.attr("x2"));
+    
+    // Make the line horizontal
+    line.attr("y2", y);
+  
+    var id = line.attr("id");
+    var labelX = (x2 > x1) ? (x1 + ((x2 - x1) * 1.5/4)) : (x2 + ((x1 - x2) * 1.5/4)); 
+    var labelY = y - 10;
+    
+    addLabel(svg, labelX, labelY, "normal", id + "()");
+    trace("arrow line drawn from (" + x1 + "," + y + ") to (" + x2 + "," + y + ")")
 }
 
 // Draw rectangle
@@ -399,8 +411,9 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height,
     trace("Lifeline drawn: [id]: " + id + " [x]: " + x + " [y]: " + y);
 }
 
-function drawArrowLine(x1, y1, x2, y2, clickEventHandler) {
+function drawArrowLine(id, x1, y1, x2, y2, clickEventHandler) {
     line = svg.append("line")
+        .attr("id", id)
         .attr("class", "arrow-line")
         .attr("x1", x1)
         .attr("y1", y1)
@@ -435,7 +448,7 @@ function moveElement(rect, data, d) {
 
 // Add a label to an element
 function addLabel(parent, x, y, class_, text) {
-    parent.append("text")
+    return parent.append("text")
         .attr("class", class_)
         .attr("x", x)
         .attr("y", y)
