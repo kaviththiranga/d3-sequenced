@@ -41,6 +41,12 @@ body {
   fill: transparent;
   stroke: #181818;
 }
+.editable-text {
+    fill: #ffffff;
+}
+.centered-text{
+    text-anchor:middle;
+}
 .arrow-line {
   stroke: #181818;
 }

@@ -63,6 +63,21 @@ var frameData = [];
 var frameWidth = 300;
 var frameHeight = 200;
 
+
+// Editable text input properties
+var textInputWidthOffset = 20;
+var textInputHeightOffset = 5;
+var lifeLineRectStrokeSize = 1.5;
+
+
+// Life line title validation properties
+var maxTitleLength = 200;
+var mixTitleLength = 1;
+var validTitleRegex = "";
+
+// Life line rect properties
+var minRectWidth = 200;
+
 toolboxArrowActivated = false;
 
 // Create window svg container --- //
@@ -378,7 +393,10 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height,
         .attr("height", rectHeight);
 
     if (!isToolboxElement) {
-        addLabel(group, x + width / 3, y + 20, "normal", id)
+        addLabel(group,
+                x + (width / 2 + lifeLineRectStrokeSize),
+                y + (rectHeight / 2 + lifeLineRectStrokeSize),
+                "normal centered-text", id)
             .call(makeTextEditable);
     }
 
@@ -449,10 +467,10 @@ function moveElement(rect, data, d) {
 
 function makeTextEditable(textElement) {
     textElement.on("mouseover", function () {
-        d3.select(this).style("fill", "red");
+        d3.select(this).classed("editable-text", true);
     }).on("mouseout", function () {
-        d3.select(this).style("fill", null);
-    }).on("click", function (d) {
+        d3.select(this).classed("editable-text", false);
+    }).on("dblclick", function (d) {
 
         var parent = this.parentNode;
         var bBox = this.getBBox();
@@ -460,61 +478,77 @@ function makeTextEditable(textElement) {
         var parentElement = d3.select(parent);
         var form = parentElement.append("foreignObject");
 
+        var width = bBox.width + textInputWidthOffset;
+        var height = bBox.height + textInputHeightOffset;
+        var x = bBox.x - width/2;
+        var y = bBox.y;
+        var size = element.text().length + 5;
+
         var input = form
-            .attr("x", bBox.x)
-            .attr("y", bBox.y)
-            .attr("width", bBox.width + 15)
-            .attr("height", bBox.height + 15)
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", width)
+            .attr("height", height)
             .append("xhtml:form")
             .append("input")
+            .attr("size", size)
             .attr("value", function () {
                 this.focus();
+                this.setSelectionRange(0, this.value.length)
                 return d.title;
             })
             .on("blur", function () {
-                var txt = input.node().value;
-                d.title = txt;
-                element.text(function (d) {
-                    return d.title;
-                });
-                parentElement.select("foreignObject").remove();
+                updateLifeLineTitle(element, parentElement, input, d);
             })
             .on("keypress", function () {
-                var e = d3.event;
-                if (e.keyCode == 13) {
-                    if (e.stopPropagation)
-                        e.stopPropagation();
-                    e.preventDefault();
-
-                    var txt = input.node().value;
-                    d.title = txt;
-                    element.text(function (d) {
-                        return d.title;
-                    });
-                    parentElement.select("foreignObject").remove();
+                var event = d3.event;
+                if (event.keyCode == 13) {
+                    if (event.stopPropagation)
+                        event.stopPropagation();
+                    event.preventDefault();
+                    updateLifeLineTitle(element, parentElement, input, d);
                 }
             });
     });
 }
 
+function updateLifeLineTitle(label, group, textInput, data){
+    var newText = textInput.node().value;
+    data.title = newText;
+    label.text(function (d) {
+        return d.title;
+    });
+    newBBox = label.node().getBBox();
+    currentWidth =  group.select("rect").attr("width");
+    newWidth = newBBox.width + 20;
+    if(newWidth < lifeLineWidth){
+        newWidth = lifeLineWidth;
+    }
+//    group.select("rect")
+//        .attr("width", newWidth)
+//        .attr("x", newBBox.x - 10)
+//        .attr("y", newBBox.y - 7.5);
+    group.select("foreignObject").remove();
+}
+
 // Add a label to an element
 function addLabel(parent, x, y, class_, text) {
-
-    var textEl = parent.append("text")
+    var textElement = parent.append("text")
         .attr("class", class_)
         .attr("x", x)
         .attr("y", y);
+
     // set title in datum it self for
     // data binded nodes
     if (parent.datum() != undefined) {
         parent.datum().title = text;
-        textEl.text(function (d) {
+        textElement.text(function (d) {
             return d.title;
         });
     } else {
-        textEl.text(text);
+        textElement.text(text);
     }
-    return textEl;
+    return textElement;
 }
 
 // Add a text field to an element
