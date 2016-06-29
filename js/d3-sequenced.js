@@ -378,7 +378,8 @@ function drawLifeLine(parent, id, class_, data, x, y, width, height,
         .attr("height", rectHeight);
 
     if (!isToolboxElement) {
-        addLabel(group, x + width / 3, y + 20, "normal", id);
+        addLabel(group, x + width / 3, y + 20, "normal", id)
+            .call(makeTextEditable);
     }
 
     lineX = x + width / 2;
@@ -446,13 +447,74 @@ function moveElement(rect, data, d) {
     });
 }
 
+function makeTextEditable(textElement) {
+    textElement.on("mouseover", function () {
+        d3.select(this).style("fill", "red");
+    }).on("mouseout", function () {
+        d3.select(this).style("fill", null);
+    }).on("click", function (d) {
+
+        var parent = this.parentNode;
+        var bBox = this.getBBox();
+        var element = d3.select(this);
+        var parentElement = d3.select(parent);
+        var form = parentElement.append("foreignObject");
+
+        var input = form
+            .attr("x", bBox.x)
+            .attr("y", bBox.y)
+            .attr("width", bBox.width + 15)
+            .attr("height", bBox.height + 15)
+            .append("xhtml:form")
+            .append("input")
+            .attr("value", function () {
+                this.focus();
+                return d.title;
+            })
+            .on("blur", function () {
+                var txt = input.node().value;
+                d.title = txt;
+                element.text(function (d) {
+                    return d.title;
+                });
+                parentElement.select("foreignObject").remove();
+            })
+            .on("keypress", function () {
+                var e = d3.event;
+                if (e.keyCode == 13) {
+                    if (e.stopPropagation)
+                        e.stopPropagation();
+                    e.preventDefault();
+
+                    var txt = input.node().value;
+                    d.title = txt;
+                    element.text(function (d) {
+                        return d.title;
+                    });
+                    parentElement.select("foreignObject").remove();
+                }
+            });
+    });
+}
+
 // Add a label to an element
 function addLabel(parent, x, y, class_, text) {
-    return parent.append("text")
+
+    var textEl = parent.append("text")
         .attr("class", class_)
         .attr("x", x)
-        .attr("y", y)
-        .text(text);
+        .attr("y", y);
+    // set title in datum it self for
+    // data binded nodes
+    if (parent.datum() != undefined) {
+        parent.datum().title = text;
+        textEl.text(function (d) {
+            return d.title;
+        });
+    } else {
+        textEl.text(text);
+    }
+    return textEl;
 }
 
 // Add a text field to an element
@@ -476,7 +538,7 @@ function addLabel(parent, x, y, class_, text) {
 
 // Prepare string representation of the data element (d)
 function dToString(d) {
-    return "[id] " + d.id + " [x] " + d.x + " [y] " + d.y;
+    return "[id] " + d.id + " [title] " + d.title + " [x] " + d.x + " [y] " + d.y;
 }
 
 // Print trace logs
