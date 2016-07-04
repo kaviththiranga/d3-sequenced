@@ -44,6 +44,10 @@ body {
 .editable-text {
     fill: #ffffff;
 }
+.editable-text-input{
+    background-color: #e0f5ff;
+    color: black;
+}
 .centered-text{
     text-anchor:middle;
 }

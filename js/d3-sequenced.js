@@ -480,9 +480,9 @@ function makeTextEditable(textElement) {
 
         var width = bBox.width + textInputWidthOffset;
         var height = bBox.height + textInputHeightOffset;
-        var x = bBox.x - width/2;
+        var x = bBox.x;
         var y = bBox.y;
-        var size = element.text().length + 5;
+        var size = element.text().length;
 
         var input = form
             .attr("x", x)
@@ -491,10 +491,11 @@ function makeTextEditable(textElement) {
             .attr("height", height)
             .append("xhtml:form")
             .append("input")
+            .classed("editable-text-input", true)
             .attr("size", size)
             .attr("value", function () {
                 this.focus();
-                this.setSelectionRange(0, this.value.length)
+                this.setSelectionRange(0, this.value.length);
                 return d.title;
             })
             .on("blur", function () {
@@ -508,27 +509,56 @@ function makeTextEditable(textElement) {
                     event.preventDefault();
                     updateLifeLineTitle(element, parentElement, input, d);
                 }
+                this.style.width = 0;
+                var newWidth = this.scrollWidth + 10;
+                if( this.scrollWidth >= this.clientWidth ){
+                    newWidth += 10;
+                }
+                this.style.width = newWidth + 'px';
+            })
+            .on("drag", function () {
+                var event = d3.event;
+                event.stopPropagation();
+                event.preventDefault();
             });
     });
 }
 
-function updateLifeLineTitle(label, group, textInput, data){
+function updateLifeLineTitle(label, group, textInput, data) {
     var newText = textInput.node().value;
     data.title = newText;
+    group.select("foreignObject").remove();
     label.text(function (d) {
         return d.title;
     });
-    newBBox = label.node().getBBox();
-    currentWidth =  group.select("rect").attr("width");
-    newWidth = newBBox.width + 20;
-    if(newWidth < lifeLineWidth){
-        newWidth = lifeLineWidth;
+    var newBBox = label.node().getBBox();
+    var currentWidth = parseInt(group.select("rect").attr("width"));
+    var newWidth = newBBox.width + 20;
+    // keep life line rect width at a minimum value
+    if (newWidth < lifeLineWidth) {
+        // adjust life line rect for new width
+        group.select("rect")
+            .attr("width", lifeLineWidth)
+            .attr("x", newBBox.x - lifeLineWidth/2 + newBBox.width/2)
+            .attr("y", newBBox.y - 7.5);
+
+        //get second text node in group which is the close button
+        var closeBtn = d3.select(group.selectAll("text")[0][1]);
+        closeBtn.attr("x", newBBox.x + lifeLineWidth/2 + newBBox.width/2)
+            .attr("y", newBBox.y - 7.5);
+    } else {
+        // adjust life line rect for new width
+        group.select("rect")
+            .attr("width", newWidth)
+            .attr("x", newBBox.x - 10)
+            .attr("y", newBBox.y - 7.5);
+
+        //get second text node in group which is the close button
+        var closeBtn = d3.select(group.selectAll("text")[0][1]);
+        closeBtn.attr("x", newBBox.x - 10 + newWidth)
+            .attr("y", newBBox.y - 7.5);
     }
-//    group.select("rect")
-//        .attr("width", newWidth)
-//        .attr("x", newBBox.x - 10)
-//        .attr("y", newBBox.y - 7.5);
-    group.select("foreignObject").remove();
+
 }
 
 // Add a label to an element
