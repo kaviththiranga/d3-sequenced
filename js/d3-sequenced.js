@@ -484,6 +484,9 @@ function makeTextEditable(textElement) {
         var y = bBox.y;
         var size = element.text().length;
 
+        // hide current text temporary
+        element.attr({opacity:0});
+
         var input = form
             .attr("x", x)
             .attr("y", y)
@@ -540,24 +543,25 @@ function updateLifeLineTitle(label, group, textInput, data) {
         group.select("rect")
             .attr("width", lifeLineWidth)
             .attr("x", newBBox.x - lifeLineWidth/2 + newBBox.width/2)
-            .attr("y", newBBox.y - 7.5);
+            .attr("y", newBBox.y - (lifeLineHeight * 0.1)/2 + newBBox.height/2 + lifeLineRectStrokeSize);
 
         //get second text node in group which is the close button
         var closeBtn = d3.select(group.selectAll("text")[0][1]);
         closeBtn.attr("x", newBBox.x + lifeLineWidth/2 + newBBox.width/2)
-            .attr("y", newBBox.y - 7.5);
+            .attr("y", newBBox.y - (lifeLineHeight * 0.1)/2 + newBBox.height/2 + lifeLineRectStrokeSize);
     } else {
         // adjust life line rect for new width
         group.select("rect")
             .attr("width", newWidth)
             .attr("x", newBBox.x - 10)
-            .attr("y", newBBox.y - 7.5);
+            .attr("y", newBBox.y - (lifeLineHeight * 0.1)/2 + newBBox.height/2 + lifeLineRectStrokeSize);
 
         //get second text node in group which is the close button
         var closeBtn = d3.select(group.selectAll("text")[0][1]);
         closeBtn.attr("x", newBBox.x - 10 + newWidth)
-            .attr("y", newBBox.y - 7.5);
+            .attr("y", newBBox.y - (lifeLineHeight * 0.1)/2 + newBBox.height/2 + lifeLineRectStrokeSize);
     }
+    label.attr({opacity:100});
 
 }
 
